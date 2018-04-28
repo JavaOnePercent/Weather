@@ -1,6 +1,6 @@
 package com.example.demo.tablemodels;
 
-import com.example.demo.models.WeatherEntity;
+import com.example.demo.models.WeatherModel;
 
 import java.util.List;
 
@@ -17,12 +17,12 @@ public class WeatherTableModel extends TableModel {
         return "";
     }
 
-    public void addDate(List<WeatherEntity> weatherEntity) {
-        for(int i = 0; i < weatherEntity.size(); i++) {
-            String []row = { weatherEntity.get(i).getDay().toString(),
-                    weatherEntity.get(i).getTime().toString(),
-                    weatherEntity.get(i).getCity(),
-                    weatherEntity.get(i).getTemperature().toString() };
+    public void addDate(List<WeatherModel> weatherModel) {
+        for(int i = 0; i < weatherModel.size(); i++) {
+            String []row = { weatherModel.get(i).getDay().toString(),
+                    weatherModel.get(i).getTime().toString(),
+                    weatherModel.get(i).getCity(),
+                    weatherModel.get(i).getTemperature().toString() };
             addDate(row);
         }
     }

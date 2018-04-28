@@ -1,6 +1,7 @@
 package com.example.demo.tablemodels;
 
-import com.example.demo.models.CurrencyEntity;
+import com.example.demo.models.CurrencyModel;
+
 import java.util.List;
 
 public class CurrencyTableModel extends TableModel {
@@ -16,7 +17,7 @@ public class CurrencyTableModel extends TableModel {
         return "";
     }
 
-    public void addDate(List<CurrencyEntity> currencyEntities) {
+    public void addDate(List<CurrencyModel> currencyEntities) {
         for(int i = 0; i < currencyEntities.size(); i++) {
             String []row = { currencyEntities.get(i).getDay().toString(),
                     currencyEntities.get(i).getTime().toString(),

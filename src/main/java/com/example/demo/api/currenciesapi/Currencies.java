@@ -1,4 +1,4 @@
-package com.example.demo.currenciesapi;
+package com.example.demo.api.currenciesapi;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 

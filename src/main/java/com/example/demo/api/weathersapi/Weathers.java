@@ -1,4 +1,4 @@
-package com.example.demo.weathersAPI;
+package com.example.demo.api.weathersapi;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;

@@ -1,20 +1,25 @@
 package com.example.demo.forms;
 
-import com.example.demo.SberTech;
-import com.example.demo.currenciesapi.Currencies;
-import com.example.demo.models.CurrencyEntity;
-import com.example.demo.models.WeatherEntity;
-import com.example.demo.weathersAPI.Weathers;
+import com.example.demo.api.Api;
+import com.example.demo.database.QueryCurrency;
+import com.example.demo.database.QueryWeather;
+import com.example.demo.api.currenciesapi.Currencies;
+import com.example.demo.models.CurrencyModel;
+import com.example.demo.models.WeatherModel;
+import com.example.demo.repository.WeatherRepository;
+import com.example.demo.repository.CurrencyRepository;
+import com.example.demo.api.weathersapi.Weathers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.net.URL;
-import java.sql.Date;
-import java.sql.Time;
-import java.text.DecimalFormat;
 
+@Component
 public class MainForm extends JFrame {
     private JPanel mainPanel;
     private JPanel bottomPanel;
@@ -40,50 +45,48 @@ public class MainForm extends JFrame {
     private JLabel labelDeg;
     private JLabel checkCurrency;
     private JLabel checkWeather;
-    private String city = null;
+    private JButton buttonReload;
 
-    public MainForm() {
-        super("SberTech");
+    private final WeatherRepository weatherRepository;
+    private final CurrencyRepository currencyRepository;
+
+    private QueryWeather queryWeather;
+    private QueryCurrency queryCurrency;
+    private Wrapper wrapper;
+    private Api api;
+    private String city;
+
+    private Weathers weathers;
+    private Currencies currencies;
+
+    @Autowired
+    public MainForm(WeatherRepository weatherRepository, CurrencyRepository currencyRepository) {
+        super("Wrapper");
         this.setSize(540, 320);
         this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setResizable(false);
         setContentPane(mainPanel);
-        SberTech sberTech = new SberTech();
+        this.weatherRepository = weatherRepository;
+        this.currencyRepository = currencyRepository;
+        wrapper = new Wrapper();
+        api = new Api();
+        queryWeather = new QueryWeather(weatherRepository);
+        queryCurrency = new QueryCurrency(currencyRepository);
         ActionListener listenerWeather = new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
                     checkWeather.setVisible(false);
-
-                    setCity(city);
-                    if (city == null)
-                        city = sberTech.TransactGetCity();
-                    if (city == null)
-                        city = "Yekaterinburg";
-                    Weathers weathers = null;
-                    String inputJson = sberTech.json("http://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=168f02697ac2e075a37c762c9e2dd423&lang=ru&units=metric");
-                    System.out.println(inputJson);
+                    getCity();
+                    String inputJson = api.getJson("http://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=168f02697ac2e075a37c762c9e2dd423&lang=ru&units=metric");
                     if (inputJson != null) {
-                        weathers = sberTech.APIWeather(inputJson);
-                        BufferedImage myPicture = ImageIO.read(new URL("http://openweathermap.org/img/w/" + weathers.getWeather().get(0).getIcon() + ".png"));
-                        sberTech.TransactSaveWeather(weathers);
-                        labelIcon.setIcon(new ImageIcon(myPicture));
-                        labelDescription.setText(weathers.getWeather().get(0).getDescription());
-                        labelPressure.setText("Давление: " + sberTech.Format(sberTech.Pressure(weathers.getMain().getPressure()), "#.##") + " mmHg");
-                        labelHumidity.setText("Влажность: " + sberTech.Format(weathers.getMain().getHumidity(), "#.#")  + " %");
-                        labelSpeed.setText("Скорость ветра: " + weathers.getWind().getSpeed() + " m/s");
-                        labelDeg.setText("Направление ветра: " + sberTech.Degree(weathers.getWind().getDeg()));
-                        checkWeather.setVisible(true);
-                        checkWeather.setToolTipText(sberTech.Update());
+                        weathers = api.APIWeather(inputJson);
+                        WeatherModel weatherModel = queryWeather.checkIdentity(weathers.getName(), weathers.getMain().getTemp());
+                        if (weatherModel == null)
+                            queryWeather.saveWeather(weathers.getName(), weathers.getMain().getTemp());
+                        showOtherDataWeather(getIcon());
                     }
-                    WeatherEntity weatherEntity = sberTech.TransactWeatherMain();
-                    if(weatherEntity != null) {
-                        labelCity.setText(weatherEntity.getCity());
-                        labelDegree.setText(weatherEntity.getTemperature() + " °C");
-                    }
-                    else {
-                        labelCity.setText("Нет данных");
-                    }
+                    showBaseDataWeather(queryWeather.getLastWeather());
 
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -95,23 +98,22 @@ public class MainForm extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     checkCurrency.setVisible(false);
-                    Currencies currencies = null;
-                    String inputJson = sberTech.json("http://www.apilayer.net/api/live?access_key=952fb1b2e8d67623436534f0099e0e6e");
-                    System.out.println(inputJson);
+                    String inputJson = api.getJson("http://www.apilayer.net/api/live?access_key=952fb1b2e8d67623436534f0099e0e6e");
                     if (inputJson != null) {
-                        currencies = sberTech.APICurrency(inputJson);
-                        sberTech.TransactSaveCurrency(currencies);
-                        checkCurrency.setVisible(true);
-                        checkCurrency.setToolTipText(sberTech.Update());
+                        currencies = api.APICurrency(inputJson);
+                        CurrencyModel currencyModel = queryCurrency.checkIdentity(wrapper.Before(wrapper.getEurrub(currencies.getQuotes().getUsdrub(),
+                                currencies.getQuotes().getUsdeur())),
+                                wrapper.After(wrapper.getEurrub(currencies.getQuotes().getUsdrub(),
+                                currencies.getQuotes().getUsdeur())),
+                                wrapper.Before(currencies.getQuotes().getUsdrub()),
+                                wrapper.After(currencies.getQuotes().getUsdrub()));
+                        if(currencyModel == null)
+                            queryCurrency.saveCurrency(wrapper.getEurrub(currencies.getQuotes().getUsdrub(),
+                                    currencies.getQuotes().getUsdeur()), wrapper.Format(currencies.getQuotes().getUsdrub(), "#.##"));
+                        showOtherDataCurrency();
                     }
-                    CurrencyEntity currencyEntity = sberTech.TransactCurrencyMain();
-                    if(currencyEntity != null) {
-                        labelCourseDollar.setText(currencyEntity.getDollar() + " \u20BD");
-                        labelCourseEuro.setText(currencyEntity.getEuro() + " \u20BD");
-                    }
-                    else {
-                        labelCourseDollar.setText("Нет данных");
-                    }
+                    showBaseDataCurrency(queryCurrency.getLastWeather());
+
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -138,7 +140,14 @@ public class MainForm extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 timerWeather.stop();
                 timerCurrency.stop();
-                onCity();
+                onSettings();
+            }
+        });
+
+        buttonReload.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                timerWeather.restart();
+                timerCurrency.restart();
             }
         });
     }
@@ -147,18 +156,71 @@ public class MainForm extends JFrame {
         this.city = city;
     }
 
-    private void onCity() {
-        // add your code here if necessary
+    private void getCity() {
+        setCity(city);
+        if (city == null) {
+            try {
+                city = queryWeather.getCity();
+            }
+            catch (NullPointerException ex){
+                ex.printStackTrace();
+                city = null;
+            }
+        }
+        if (city == null)
+            city = "Yekaterinburg";
+    }
+
+    private void showBaseDataWeather (WeatherModel weatherModel) {
+        if(weatherModel != null) {
+            labelCity.setText(weatherModel.getCity());
+            labelDegree.setText(weatherModel.getTemperature() + " °C");
+        }
+        else {
+            labelCity.setText("Нет данных");
+        }
+    }
+
+    private void showOtherDataWeather(BufferedImage Icon) {
+        labelIcon.setIcon(new ImageIcon(Icon));
+        labelDescription.setText(weathers.getWeather().get(0).getDescription());
+        labelPressure.setText("Давление: " + wrapper.Format(wrapper.Pressure(weathers.getMain().getPressure()), "#.##") + " mmHg");
+        labelHumidity.setText("Влажность: " + wrapper.Format(weathers.getMain().getHumidity(), "#.#")  + " %");
+        labelSpeed.setText("Скорость ветра: " + weathers.getWind().getSpeed() + " m/s");
+        labelDeg.setText("Направление ветра: " + wrapper.Degree(weathers.getWind().getDeg()));
+        checkWeather.setVisible(true);
+        checkWeather.setToolTipText(wrapper.Update());
+    }
+
+    private BufferedImage getIcon() throws IOException {
+        return ImageIO.read(new URL("http://openweathermap.org/img/w/" + weathers.getWeather().get(0).getIcon() + ".png"));
+    }
+
+    private void showBaseDataCurrency(CurrencyModel currencyEntity) {
+        if(currencyEntity != null) {
+            labelCourseDollar.setText(currencyEntity.getDollar() + " \u20BD");
+            labelCourseEuro.setText(currencyEntity.getEuro() + " \u20BD");
+        }
+        else {
+            labelCourseDollar.setText("Нет данных");
+        }
+    }
+
+    private void showOtherDataCurrency() {
+        checkCurrency.setVisible(true);
+        checkCurrency.setToolTipText(wrapper.Update());
+    }
+
+    private void onSettings() {
         mainPanel.setVisible(false);
-        City city = new City();
-        city.setVisible(true);
+        Settings settings = new Settings(weatherRepository, currencyRepository);
+        settings.setVisible(true);
         this.dispose();
     }
 
     private void onHistory() {
-        // add your code here if necessary
         mainPanel.setVisible(false);
-        History history = new History();
+        History history = new History(weatherRepository, currencyRepository);
         history.setVisible(true);
         this.dispose();
     }
