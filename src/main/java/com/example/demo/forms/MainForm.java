@@ -78,7 +78,7 @@ public class MainForm extends JFrame {
                 try {
                     checkWeather.setVisible(false);
                     getCity();
-                    String inputJson = api.getJson("http://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=168f02697ac2e075a37c762c9e2dd423&lang=ru&units=metric");
+                    String inputJson = api.getJson(api.UrlApiWeather(city));
                     if (inputJson != null) {
                         weathers = api.APIWeather(inputJson);
                         WeatherModel weatherModel = queryWeather.checkIdentity(weathers.getName(), weathers.getMain().getTemp());
@@ -98,7 +98,7 @@ public class MainForm extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     checkCurrency.setVisible(false);
-                    String inputJson = api.getJson("http://www.apilayer.net/api/live?access_key=952fb1b2e8d67623436534f0099e0e6e");
+                    String inputJson = api.getJson(api.UrlApiCurrency());
                     if (inputJson != null) {
                         currencies = api.APICurrency(inputJson);
                         CurrencyModel currencyModel = queryCurrency.checkIdentity(wrapper.Before(wrapper.getEurrub(currencies.getQuotes().getUsdrub(),

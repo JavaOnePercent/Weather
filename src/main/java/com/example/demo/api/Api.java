@@ -29,6 +29,12 @@ public class Api {
             return null;
         }
     }
+    public String UrlApiWeather(String city) {
+        return "http://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=168f02697ac2e075a37c762c9e2dd423&lang=ru&units=metric";
+    }
+    public String UrlApiCurrency() {
+        return "http://www.apilayer.net/api/live?access_key=c6d1d0795016f0d2be7a271084538f26";
+    }
     public Weathers APIWeather(String inputJson) throws IOException {
         Weathers weathers = null;
         ObjectMapper mapper = new ObjectMapper();
