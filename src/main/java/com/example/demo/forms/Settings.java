@@ -15,8 +15,6 @@ public class Settings extends JFrame {
     private JButton okButton;
     private JLabel labelTitle;
     private JButton backButton;
-    private JButton buttonOK;
-    private JButton buttonCancel;
 
     private final WeatherRepository weatherRepository;
     private final CurrencyRepository currencyRepository;

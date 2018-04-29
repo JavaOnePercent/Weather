@@ -1,7 +1,6 @@
 package com.example.demo.database;
 
 import com.example.demo.models.CurrencyModel;
-import com.example.demo.models.WeatherModel;
 import com.example.demo.repository.CurrencyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

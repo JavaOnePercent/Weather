@@ -5,7 +5,6 @@ import java.sql.Date;
 import java.sql.Time;
 
 @Entity
-//@Table(name = "weather", schema = "sbertech_db", catalog = "")
 public class WeatherModel {
 
     @Id

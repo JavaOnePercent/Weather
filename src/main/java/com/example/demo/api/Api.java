@@ -36,16 +36,12 @@ public class Api {
         return "http://www.apilayer.net/api/live?access_key=c6d1d0795016f0d2be7a271084538f26";
     }
     public Weathers APIWeather(String inputJson) throws IOException {
-        Weathers weathers = null;
         ObjectMapper mapper = new ObjectMapper();
-        weathers = mapper.readValue(inputJson, Weathers.class);
-        return weathers;
+        return mapper.readValue(inputJson, Weathers.class);
     }
     public Currencies APICurrency(String inputJson) throws IOException {
-        Currencies currencies = null;
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
-        currencies = mapper.readValue(inputJson, Currencies.class);
-        return currencies;
+        return mapper.readValue(inputJson, Currencies.class);
     }
 }

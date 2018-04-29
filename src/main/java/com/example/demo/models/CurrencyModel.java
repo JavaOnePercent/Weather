@@ -5,7 +5,6 @@ import java.sql.Date;
 import java.sql.Time;
 
 @Entity
-//@Table(name = "currency", schema = "sbertech_db", catalog = "")
 public class CurrencyModel {
 
     @Id
